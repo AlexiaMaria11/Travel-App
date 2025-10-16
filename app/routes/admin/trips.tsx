@@ -6,6 +6,11 @@ import type { Route } from "./+types/trips";
 import { useState } from "react";
 import { PagerComponent } from "@syncfusion/ej2-react-grids";
 
+type TripsLoaderData = {
+  trips: Trip[];
+  total: number;
+};
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const limit = 8;
   const url = new URL(request.url);
@@ -24,7 +29,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   };
 };
 
-const Trips = ({ loaderData }: Route.ComponentProps) => {
+const Trips = ({ loaderData }: { loaderData: TripsLoaderData }) => {
+  const trips = (loaderData?.trips as Trip[]) || [];
+  const total = loaderData?.total || 0;
+
   const [searchParams] = useSearchParams();
   const initialPage = Number(searchParams.get("page") || "1");
 
@@ -48,6 +56,28 @@ const Trips = ({ loaderData }: Route.ComponentProps) => {
         <h1 className="p-24-semibold text-dark-100 mb-4">
           Manage Created Trips
         </h1>
+
+        <div className="trip-grid mb-4">
+          {trips.map((trip) => (
+            <TripCard
+              key={trip.id}
+              id={trip.id}
+              name={trip.name}
+              imageUrl={trip.imageUrls[0]}
+              location={trip.itinerary?.[0]?.location ?? ""}
+              tags={[trip.interests, trip.travelStyle]}
+              price={trip.estimatedPrice}
+            />
+          ))}
+        </div>
+
+        <PagerComponent
+          totalRecordsCount={total}
+          pageSize={8}
+          currentPage={currentPage}
+          click={(args) => handlePageChange(args.currentPage)}
+          cssClass="!mb-4"
+        />
       </section>
     </main>
   );
